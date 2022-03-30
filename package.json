@@ -4,7 +4,8 @@
   "description": "Hakushin Master Duel Club - Web application for managing Yu-Gi-Oh match results",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node backend/index.js"
   },
   "repository": {
     "type": "git",
