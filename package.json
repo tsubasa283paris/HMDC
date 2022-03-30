@@ -1,0 +1,23 @@
+{
+  "name": "hmdc",
+  "version": "1.0.0",
+  "description": "Hakushin Master Duel Club - Web application for managing Yu-Gi-Oh match results",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsubasa283paris/HMDC.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tsubasa283paris/HMDC/issues"
+  },
+  "homepage": "https://github.com/tsubasa283paris/HMDC#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
