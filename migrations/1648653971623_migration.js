@@ -119,7 +119,6 @@ exports.up = (pgm) => {
       id: 'id',
       league_id: {
         type: 'integer',
-        notNull: true,
         references: '"league"',
         onDelete: 'cascade',
       },
