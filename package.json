@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node backend/index.js",
-    "migrate": "node-pg-migrate"
+    "migrate": "node-pg-migrate",
+    "sequelize": "sequelize"
   },
   "repository": {
     "type": "git",
