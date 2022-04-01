@@ -1,4 +1,4 @@
 development:
     dialect: postgres
     datasource: dbname=hmdc user=${DB_USER} password=${DB_PASSWORD} sslmode=require
-    dir: db/migration
+    dir: sql/migration
