@@ -53,7 +53,6 @@ func (s *Server) Router() {
 
 	// auth API
 	s.router.Route("/api/auth", func(authRouter chi.Router) {
-		authRouter.Use(Check)
 		authRouter.Post("/login", api.Handler(c.Login).ServeHTTP)
 	})
 }
@@ -77,14 +76,6 @@ func Auth(db string) (fn func(http.Handler) http.Handler) {
 		})
 	}
 	return
-}
-
-func Check(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// body, _ := io.ReadAll(r.Body)
-		// r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-		next.ServeHTTP(w, r)
-	})
 }
 
 func main() {

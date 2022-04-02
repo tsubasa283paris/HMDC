@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -13,12 +14,12 @@ import (
 )
 
 type LoginParam struct {
-	id       string `json:"id"`
-	password string `json:"password"`
+	ID       string `json:"id"`
+	Password string `json:"password"`
 }
 
 type LoginResponse struct {
-	token string `json:"token"`
+	Token string `json:"token"`
 }
 
 // Check user id and password, return a token if valid
@@ -26,8 +27,16 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) (int, interfa
 	log.Println("Login start")
 
 	// receive body as API parameter
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to read body",
+			},
+			errors.Wrap(err, "")
+	}
 	var param LoginParam
-	err := json.NewDecoder(r.Body).Decode(&param)
+	err = json.Unmarshal(body, &param)
 	if err != nil {
 		return http.StatusInternalServerError,
 			ErrorBody{
@@ -35,7 +44,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) (int, interfa
 			},
 			errors.Wrap(err, "")
 	}
-	log.Println("param:", param)
+	log.Println("param:", string(body))
 
 	// open database connection
 	dbCnx, err := utils.DbCnx()
@@ -51,7 +60,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) (int, interfa
 	queries := db.New(dbCnx)
 
 	// run query
-	user, err := queries.GetUser(c.ctx, param.id)
+	user, err := queries.GetUser(c.ctx, param.ID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return http.StatusBadRequest,
 			ErrorBody{
@@ -67,7 +76,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) (int, interfa
 	}
 
 	// invalid if password is wrong
-	if param.password != user.Password {
+	if param.Password != user.Password {
 		return http.StatusBadRequest,
 			ErrorBody{
 				Error: "invalid id or password",
@@ -77,7 +86,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) (int, interfa
 
 	// write response
 	resp := LoginResponse{
-		token: "admin",
+		Token: "admin",
 	}
 
 	log.Println("Login end")

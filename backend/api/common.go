@@ -54,8 +54,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}()
-	// body, _ := ioutil.ReadAll(r.Body)
-	// log.Println("body:", string(body))
 	status, res, err := h(w, r)
 	if err != nil {
 		log.Printf("error: %s", err)
