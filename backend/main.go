@@ -54,6 +54,7 @@ func (s *Server) Router() {
 	// auth API
 	s.router.Route("/api/auth", func(authRouter chi.Router) {
 		authRouter.Post("/login", api.Handler(c.Login).ServeHTTP)
+		authRouter.Post("/signup", api.Handler(c.SignUp).ServeHTTP)
 	})
 }
 
