@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
+	"runtime/debug"
 )
 
 type ErrorBody struct {
@@ -15,51 +17,51 @@ type NullInt32 struct {
 	sql.NullInt32
 }
 
-// Handler struct
-type Handler struct {
+// Controller struct
+type Controller struct {
 	ctx context.Context
 }
 
-// Constructor for struct Handler
-func NewHandler() *Handler {
-	return &Handler{
+type Handler func(http.ResponseWriter, *http.Request) (int, interface{}, error)
+
+// Constructor for struct Controller
+func NewController() *Controller {
+	return &Controller{
 		ctx: context.Background(),
 	}
 }
 
 // Generate and write JSON for response as success
-func respondJSON(w http.ResponseWriter, payload interface{}) {
+func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	response, err := json.MarshalIndent(payload, "", "    ")
 	if err != nil {
-		RespondError(
-			w,
-			"failed to json.Marshal",
-			http.StatusInternalServerError,
-		)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "failed to marshal response"}`))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	w.Write([]byte(response))
 }
 
-// Convert error string to JSON form byte array
-func errorBodyJSONBytes(s string) []byte {
-	errorBodyJSON, err := json.Marshal(ErrorBody{
-		Error: s,
-	})
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if rv := recover(); rv != nil {
+			debug.PrintStack()
+			log.Printf("panic: %s", rv)
+			http.Error(w, http.StatusText(
+				http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	}()
+	// body, _ := ioutil.ReadAll(r.Body)
+	// log.Println("body:", string(body))
+	status, res, err := h(w, r)
 	if err != nil {
-		errorBodyJSON = []byte{}
+		log.Printf("error: %s", err)
 	}
-	return errorBodyJSON
-}
-
-// Write error code to header and error JSON to body respectively
-func RespondError(w http.ResponseWriter, err string, code int) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(code)
-	w.Write(errorBodyJSONBytes(err))
+	RespondJSON(w, status, res)
+	return
 }
 
 // Marshal NullInt32 value converting null value as JSON null

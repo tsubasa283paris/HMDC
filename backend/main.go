@@ -41,20 +41,20 @@ func (s *Server) Middleware() {
 
 // Routing structures
 func (s *Server) Router() {
-	h := api.NewHandler()
-	s.router.Route("/api", func(api chi.Router) {
-		api.Use(Auth("db connection")) // middleware
+	c := api.NewController()
+	s.router.Route("/api", func(apiRouter chi.Router) {
+		apiRouter.Use(Auth("db connection")) // middleware
 
 		// users API
-		api.Route("/users", func(users chi.Router) {
-			users.Get("/", h.GetUsers)
+		apiRouter.Route("/users", func(users chi.Router) {
+			users.Get("/", api.Handler(c.GetUsers).ServeHTTP)
 		})
 	})
 
 	// auth API
-	s.router.Route("/api/auth", func(auth chi.Router) {
-		auth.Use(Check)
-		auth.Post("/login", h.Login)
+	s.router.Route("/api/auth", func(authRouter chi.Router) {
+		authRouter.Use(Check)
+		authRouter.Post("/login", api.Handler(c.Login).ServeHTTP)
 	})
 }
 
@@ -64,7 +64,13 @@ func Auth(db string) (fn func(http.Handler) http.Handler) {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get("Authorization")
 			if token != "admin" {
-				api.RespondError(w, "invalid token", http.StatusUnauthorized)
+				api.RespondJSON(
+					w,
+					http.StatusUnauthorized,
+					api.ErrorBody{
+						Error: "invalid token",
+					},
+				)
 				return
 			}
 			h.ServeHTTP(w, r)

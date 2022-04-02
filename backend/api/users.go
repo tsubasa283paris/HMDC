@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -12,38 +11,33 @@ import (
 )
 
 // Get list of all users, containing only id and name
-func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) GetUsers(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
 	log.Println("GetUsers start")
 
 	// open database connection
 	dbCnx, err := utils.DbCnx()
 	if err != nil {
-		RespondError(
-			w,
-			"failed to connect to the database",
-			http.StatusInternalServerError,
-		)
-		log.Println(fmt.Sprintf("%+v", errors.Wrap(err, "")))
-		return
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
 	}
 
 	// prepare for query
 	queries := db.New(dbCnx)
 
 	// run query
-	userList, err := queries.ListUsers(h.ctx)
+	userList, err := queries.ListUsers(c.ctx)
 	if err != nil {
-		RespondError(
-			w,
-			"failed to communicate with database",
-			http.StatusInternalServerError,
-		)
-		log.Println(fmt.Sprintf("%+v", errors.Wrap(err, "")))
-		return
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
 	}
 
-	// write response
-	respondJSON(w, userList)
-
 	log.Println("GetUsers end")
+
+	return http.StatusOK, userList, nil
 }

@@ -3,7 +3,6 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -23,74 +22,67 @@ type LoginResponse struct {
 }
 
 // Check user id and password, return a token if valid
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Login(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
 	log.Println("Login start")
 
 	// receive body as API parameter
 	var param LoginParam
 	err := json.NewDecoder(r.Body).Decode(&param)
 	if err != nil {
-		RespondError(
-			w,
-			"failed to decode body string to JSON format required by this API",
-			http.StatusBadRequest,
-		)
-		log.Println(fmt.Sprintf("%+v", errors.Wrap(err, "")))
-		return
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to decode body string to JSON format required by this API",
+			},
+			errors.Wrap(err, "")
 	}
 	log.Println("param:", param)
 
 	// open database connection
 	dbCnx, err := utils.DbCnx()
 	if err != nil {
-		RespondError(
-			w,
-			"failed to connect to the database",
-			http.StatusInternalServerError,
-		)
-		log.Println(fmt.Sprintf("%+v", errors.Wrap(err, "")))
-		return
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
 	}
 
 	// prepare for query
 	queries := db.New(dbCnx)
 
 	// run query
-	user, err := queries.GetUser(h.ctx, param.id)
+	user, err := queries.GetUser(c.ctx, param.id)
 	if errors.Is(err, sql.ErrNoRows) {
-		RespondError(
-			w,
-			"invalid id or password",
-			http.StatusBadRequest,
-		)
-		log.Println("Invalid ID or password")
-		return
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "invalid id or password",
+			},
+			errors.Wrap(err, "")
 	} else if err != nil {
-		RespondError(
-			w,
-			"failed to communicate with database",
-			http.StatusInternalServerError,
-		)
-		log.Println(fmt.Sprintf("%+v", errors.Wrap(err, "")))
-		return
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
 	}
 
 	// invalid if password is wrong
 	if param.password != user.Password {
-		RespondError(
-			w,
-			"invalid id or password",
-			http.StatusBadRequest,
-		)
-		log.Println("Invalid ID or password")
-		return
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "invalid id or password",
+			},
+			errors.Wrap(err, "")
 	}
 
 	// write response
 	resp := LoginResponse{
 		token: "admin",
 	}
-	respondJSON(w, resp)
 
 	log.Println("Login end")
+
+	return http.StatusOK,
+		resp,
+		nil
 }
