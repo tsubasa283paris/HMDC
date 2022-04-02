@@ -9,9 +9,9 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
-  id, password, name
+    id, password, name
 ) VALUES (
-  $1, $2, $3
+    $1, $2, $3
 )
 RETURNING id, password, name, created_at, updated_at, deleted_at
 `
@@ -67,24 +67,32 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT (id, name) FROM users
+SELECT 
+    id,
+    name
+FROM users
 WHERE deleted_at IS NULL
 ORDER BY id
 `
 
-func (q *Queries) ListUsers(ctx context.Context) ([]interface{}, error) {
+type ListUsersRow struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 	rows, err := q.db.QueryContext(ctx, listUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []interface{}
+	var items []ListUsersRow
 	for rows.Next() {
-		var column_1 interface{}
-		if err := rows.Scan(&column_1); err != nil {
+		var i ListUsersRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
 			return nil, err
 		}
-		items = append(items, column_1)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

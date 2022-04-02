@@ -3,15 +3,18 @@ SELECT * FROM users
 WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: ListUsers :many
-SELECT (id, name) FROM users
+SELECT 
+    id,
+    name
+FROM users
 WHERE deleted_at IS NULL
 ORDER BY id;
 
 -- name: CreateUser :one
 INSERT INTO users (
-  id, password, name
+    id, password, name
 ) VALUES (
-  $1, $2, $3
+    $1, $2, $3
 )
 RETURNING *;
 
