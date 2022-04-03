@@ -58,6 +58,7 @@ func (s *Server) Router() {
 		// decks API
 		apiRouter.Route("/decks", func(users chi.Router) {
 			users.Get("/", api.Handler(c.GetDecks).ServeHTTP)
+			users.Get("/{deckId}/stats", api.Handler(c.GetDeckStats).ServeHTTP)
 		})
 	})
 

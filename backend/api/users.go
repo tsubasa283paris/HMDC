@@ -96,7 +96,7 @@ func (c *Controller) GetUserStats(w http.ResponseWriter, r *http.Request) (int, 
 			ErrorBody{
 				Error: "url parameter missing: userId",
 			},
-			nil
+			errors.New("url parameter missing")
 	}
 
 	// open database connection
@@ -164,7 +164,7 @@ func (c *Controller) GetUserDuelHistory(w http.ResponseWriter, r *http.Request) 
 			ErrorBody{
 				Error: "url parameter missing: userId",
 			},
-			nil
+			errors.New("url parameter missing")
 	}
 
 	// open database connection
@@ -236,7 +236,7 @@ func (c *Controller) GetUserDecks(w http.ResponseWriter, r *http.Request) (int, 
 			ErrorBody{
 				Error: "url parameter missing: userId",
 			},
-			nil
+			errors.New("url parameter missing")
 	}
 
 	// open database connection
@@ -308,7 +308,7 @@ func (c *Controller) GetUserDetails(w http.ResponseWriter, r *http.Request) (int
 			ErrorBody{
 				Error: "url parameter missing: userId",
 			},
-			nil
+			errors.New("url parameter missing")
 	}
 
 	// open database connection
@@ -372,7 +372,7 @@ func (c *Controller) PutUserDetails(w http.ResponseWriter, r *http.Request) (int
 			ErrorBody{
 				Error: "url parameter missing: userId",
 			},
-			nil
+			errors.New("url parameter missing")
 	}
 
 	// receive body as API parameter
