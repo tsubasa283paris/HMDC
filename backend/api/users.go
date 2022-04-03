@@ -2,12 +2,15 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/lib/pq"
 	"github.com/tsubasa283paris/HMDC/sqlc/db"
 	"github.com/tsubasa283paris/HMDC/utils"
 
@@ -22,7 +25,7 @@ type UserStatsPerLeague struct {
 
 type UserDuelHistory struct {
 	DuelID         int32     `json:"duel_id"`
-	LeagueID       int32     `json:"league_id"`
+	LeagueID       NullInt32 `json:"league_id"`
 	OpponentUserID string    `json:"opponent_user_id"`
 	DeckID         int32     `json:"deck_id"`
 	OpponentDeckID int32     `json:"opponent_deck_id"`
@@ -40,6 +43,12 @@ type UserDeck struct {
 }
 
 type UserDetails struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+type PutUserDetailsParam struct {
+	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
 }
@@ -202,7 +211,7 @@ func (c *Controller) GetUserDuelHistory(w http.ResponseWriter, r *http.Request) 
 	for _, duelHistory := range duelHistoryList {
 		responseBody = append(responseBody, UserDuelHistory{
 			DuelID:         duelHistory.ID,
-			LeagueID:       duelHistory.LeagueID,
+			LeagueID:       NullInt32(duelHistory.LeagueID),
 			OpponentUserID: duelHistory.OpponentUserID,
 			DeckID:         duelHistory.DeckID,
 			OpponentDeckID: duelHistory.OpponentDeckID,
@@ -347,6 +356,114 @@ func (c *Controller) GetUserDetails(w http.ResponseWriter, r *http.Request) (int
 	}
 
 	log.Println("GetUserDetails end")
+
+	return http.StatusOK, responseBody, nil
+}
+
+// Edit user details: id, name and password
+// Return 403 if not requested by the target user itself
+func (c *Controller) PutUserDetails(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
+	log.Println("PutUserDetails start")
+
+	// acquire URL parameter
+	paramUserID := chi.URLParam(r, "userId")
+	if paramUserID == "" {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "url parameter missing: userId",
+			},
+			nil
+	}
+
+	// receive body as API parameter
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to read body",
+			},
+			errors.Wrap(err, "")
+	}
+	var param PutUserDetailsParam
+	err = json.Unmarshal(body, &param)
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to decode body string to JSON format required by this API",
+			},
+			errors.Wrap(err, "")
+	}
+	log.Println("param:", string(body))
+
+	// open database connection
+	dbCnx, err := utils.DbCnx()
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// prepare for query
+	queries := db.New(dbCnx)
+
+	// check if the specified ID exists
+	_, err = queries.GetUser(c.ctx, paramUserID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusNotFound,
+			ErrorBody{
+				Error: "user not found (blame: url parameter)",
+			},
+			errors.Wrap(err, "")
+	} else if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// reject if not self-querying
+	reqUserID := r.Header.Get("UserID")
+	if reqUserID != paramUserID {
+		return http.StatusForbidden,
+			ErrorBody{
+				Error: "updating other user is not allowed",
+			},
+			errors.New("forbidden user update")
+	}
+
+	// update user details
+	err = queries.UpdateUser(c.ctx, db.UpdateUserParams{
+		ID:       paramUserID,
+		ID_2:     param.ID,
+		Password: param.Password,
+		Name:     param.Name,
+	})
+	if err, ok := err.(*pq.Error); ok {
+		fmt.Println(err.Code)
+		if err.Code == "unique_violation" {
+			return http.StatusBadRequest,
+				ErrorBody{
+					Error: "specified id already exists",
+				},
+				errors.Wrap(err, "")
+		} else if err != nil {
+			return http.StatusInternalServerError,
+				ErrorBody{
+					Error: "failed to communicate with database",
+				},
+				errors.Wrap(err, "")
+		}
+	}
+
+	// create responseBody
+	responseBody := ErrorBody{
+		Error: "",
+	}
+
+	log.Println("PutUserDetails end")
 
 	return http.StatusOK, responseBody, nil
 }
