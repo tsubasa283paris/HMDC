@@ -13,9 +13,7 @@ type ErrorBody struct {
 	Error string `json:"error"`
 }
 
-type NullInt32 struct {
-	sql.NullInt32
-}
+type NullInt32 sql.NullInt32
 
 // Controller struct
 type Controller struct {

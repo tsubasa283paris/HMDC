@@ -30,6 +30,15 @@ type UserDuelHistory struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
+type UserDeck struct {
+	DeckID      int32     `json:"deck_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	LeagueID    NullInt32 `json:"league_id"`
+	NumDuel     int32     `json:"num_duel"`
+	NumWin      int32     `json:"num_win"`
+}
+
 // Get list of all users, containing only id and name
 func (c *Controller) GetUsers(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
 	log.Println("GetUsers start")
@@ -94,7 +103,7 @@ func (c *Controller) GetUserStats(w http.ResponseWriter, r *http.Request) (int, 
 	if errors.Is(err, sql.ErrNoRows) {
 		return http.StatusNotFound,
 			ErrorBody{
-				Error: "user not found (blame: query parameter)",
+				Error: "user not found (blame: url parameter)",
 			},
 			errors.Wrap(err, "")
 	} else if err != nil {
@@ -162,7 +171,7 @@ func (c *Controller) GetUserDuelHistory(w http.ResponseWriter, r *http.Request) 
 	if errors.Is(err, sql.ErrNoRows) {
 		return http.StatusNotFound,
 			ErrorBody{
-				Error: "user not found (blame: query parameter)",
+				Error: "user not found (blame: url parameter)",
 			},
 			errors.Wrap(err, "")
 	} else if err != nil {
@@ -198,6 +207,77 @@ func (c *Controller) GetUserDuelHistory(w http.ResponseWriter, r *http.Request) 
 	}
 
 	log.Println("GetUserDuelHistory end")
+
+	return http.StatusOK, responseBody, nil
+}
+
+// Get decks belonging to the specified user
+func (c *Controller) GetUserDecks(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
+	log.Println("GetUserDecks start")
+
+	// acquire URL parameter
+	paramUserID := chi.URLParam(r, "userId")
+	if paramUserID == "" {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "query parameter missing: userId",
+			},
+			nil
+	}
+
+	// open database connection
+	dbCnx, err := utils.DbCnx()
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// prepare for query
+	queries := db.New(dbCnx)
+
+	// check if the specified ID exists
+	_, err = queries.GetUser(c.ctx, paramUserID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusNotFound,
+			ErrorBody{
+				Error: "user not found (blame: url parameter)",
+			},
+			errors.Wrap(err, "")
+	} else if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// get decks
+	deckList, err := queries.ListUserDecks(c.ctx, paramUserID)
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// create responseBody
+	var responseBody []UserDeck
+	for _, deck := range deckList {
+		responseBody = append(responseBody, UserDeck{
+			DeckID:      deck.ID,
+			Name:        deck.Name,
+			Description: deck.Description,
+			LeagueID:    NullInt32(deck.LeagueID),
+			NumDuel:     deck.NumDuel,
+			NumWin:      deck.NumWin,
+		})
+	}
+
+	log.Println("GetUserDecks end")
 
 	return http.StatusOK, responseBody, nil
 }

@@ -50,6 +50,7 @@ func (s *Server) Router() {
 			users.Get("/", api.Handler(c.GetUsers).ServeHTTP)
 			users.Get("/{userId}/stats", api.Handler(c.GetUserStats).ServeHTTP)
 			users.Get("/{userId}/duelhistory", api.Handler(c.GetUserDuelHistory).ServeHTTP)
+			users.Get("/{userId}/decks", api.Handler(c.GetUserDecks).ServeHTTP)
 		})
 	})
 
