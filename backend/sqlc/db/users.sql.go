@@ -5,6 +5,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -205,6 +206,95 @@ func (q *Queries) GetUserStats(ctx context.Context, user1ID string) ([]GetUserSt
 	for rows.Next() {
 		var i GetUserStatsRow
 		if err := rows.Scan(&i.LeagueID, &i.NumDuel, &i.NumWin); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserDecks = `-- name: ListUserDecks :many
+SELECT
+    d.id,
+    d.name,
+    d.description,
+    l.league_id,
+    (SELECT (
+        (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.deck_1_id = d.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
+        ) + (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.deck_2_id = d.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
+        )
+    )) AS num_duel,
+    (SELECT (
+        (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.deck_1_id = d.id
+                AND dl.result = 1
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
+        ) + (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.deck_2_id = d.id
+                AND dl.result = 2
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
+        )
+    )) AS num_win
+FROM decks d
+LEFT JOIN league_decks l ON d.id = l.deck_id
+WHERE d.user_id = $1
+    AND d.deleted_at IS NULL
+    AND NOT EXISTS (
+        SELECT 1
+        FROM league_decks l2
+        WHERE l2.deck_id = l.deck_id
+            AND l2.created_at > l.created_at
+    )
+`
+
+type ListUserDecksRow struct {
+	ID          int32         `json:"id"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	LeagueID    sql.NullInt32 `json:"league_id"`
+	NumDuel     int32         `json:"num_duel"`
+	NumWin      int32         `json:"num_win"`
+}
+
+func (q *Queries) ListUserDecks(ctx context.Context, userID string) ([]ListUserDecksRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserDecks, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserDecksRow
+	for rows.Next() {
+		var i ListUserDecksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.LeagueID,
+			&i.NumDuel,
+			&i.NumWin,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
