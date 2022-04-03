@@ -66,6 +66,73 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 	return i, err
 }
 
+const getUserStats = `-- name: GetUserStats :many
+SELECT
+    l.id AS league_id,
+    (SELECT (
+        (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_1_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        ) + (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_2_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        )
+    )) AS num_duel,
+    (SELECT (
+        (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_1_id = $1
+                AND dl.result = 1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        ) + (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_2_id = $1
+                AND dl.result = 2
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        )
+    )) AS num_win
+FROM leagues l
+`
+
+type GetUserStatsRow struct {
+	LeagueID int32 `json:"league_id"`
+	NumDuel  int32 `json:"num_duel"`
+	NumWin   int32 `json:"num_win"`
+}
+
+func (q *Queries) GetUserStats(ctx context.Context, user1ID string) ([]GetUserStatsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserStats, user1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserStatsRow
+	for rows.Next() {
+		var i GetUserStatsRow
+		if err := rows.Scan(&i.LeagueID, &i.NumDuel, &i.NumWin); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT 
     id,
