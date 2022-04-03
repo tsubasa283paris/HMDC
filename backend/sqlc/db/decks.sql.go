@@ -116,21 +116,31 @@ SELECT
             SELECT COUNT(*)
             FROM duels dl
             WHERE dl.deck_1_id = d.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
             WHERE dl.deck_2_id = d.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_duel,
     (SELECT (
         (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_1_id = d.id AND dl.result = 1
+            WHERE dl.deck_1_id = d.id
+                AND dl.result = 1
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_2_id = d.id AND dl.result = 2
+            WHERE dl.deck_2_id = d.id
+                AND dl.result = 2
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_win
 FROM decks d

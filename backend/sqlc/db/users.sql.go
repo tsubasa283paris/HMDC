@@ -251,12 +251,14 @@ SELECT
             WHERE dl.user_1_id = $1
                 AND dl.league_id = l.id
                 AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
             WHERE dl.user_2_id = $1
                 AND dl.league_id = l.id
                 AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_duel,
     (SELECT (
@@ -267,6 +269,7 @@ SELECT
                 AND dl.result = 1
                 AND dl.league_id = l.id
                 AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
@@ -274,6 +277,7 @@ SELECT
                 AND dl.result = 2
                 AND dl.league_id = l.id
                 AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_win
 FROM leagues l
