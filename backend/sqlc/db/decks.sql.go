@@ -47,49 +47,63 @@ func (q *Queries) GetDeck(ctx context.Context, id int32) (GetDeckRow, error) {
 	return i, err
 }
 
-const getDeckStats = `-- name: GetDeckStats :many
+const listDeckStats = `-- name: ListDeckStats :many
 SELECT
     l.id AS league_id,
     (SELECT (
         (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_1_id = $1 AND dl.league_id = l.id
+            WHERE dl.deck_1_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_2_id = $1 AND dl.league_id = l.id
+            WHERE dl.deck_2_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_duel,
     (SELECT (
         (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_1_id = $1 AND dl.result = 1 AND dl.league_id = l.id
+            WHERE dl.deck_1_id = $1
+                AND dl.result = 1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_2_id = $1 AND dl.result = 2 AND dl.league_id = l.id
+            WHERE dl.deck_2_id = $1
+                AND dl.result = 2
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_win
 FROM leagues l
 `
 
-type GetDeckStatsRow struct {
+type ListDeckStatsRow struct {
 	LeagueID int32 `json:"league_id"`
 	NumDuel  int32 `json:"num_duel"`
 	NumWin   int32 `json:"num_win"`
 }
 
-func (q *Queries) GetDeckStats(ctx context.Context, deck1ID int32) ([]GetDeckStatsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getDeckStats, deck1ID)
+func (q *Queries) ListDeckStats(ctx context.Context, deck1ID int32) ([]ListDeckStatsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDeckStats, deck1ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetDeckStatsRow
+	var items []ListDeckStatsRow
 	for rows.Next() {
-		var i GetDeckStatsRow
+		var i ListDeckStatsRow
 		if err := rows.Scan(&i.LeagueID, &i.NumDuel, &i.NumWin); err != nil {
 			return nil, err
 		}

@@ -22,29 +22,43 @@ SET name = $2,
     updated_at = NOW()
 WHERE id = $1 AND deleted_at IS NULL;
 
--- name: GetDeckStats :many
+-- name: ListDeckStats :many
 SELECT
     l.id AS league_id,
     (SELECT (
         (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_1_id = $1 AND dl.league_id = l.id
+            WHERE dl.deck_1_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_2_id = $1 AND dl.league_id = l.id
+            WHERE dl.deck_2_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_duel,
     (SELECT (
         (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_1_id = $1 AND dl.result = 1 AND dl.league_id = l.id
+            WHERE dl.deck_1_id = $1
+                AND dl.result = 1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         ) + (
             SELECT COUNT(*)
             FROM duels dl
-            WHERE dl.deck_2_id = $1 AND dl.result = 2 AND dl.league_id = l.id
+            WHERE dl.deck_2_id = $1
+                AND dl.result = 2
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+                AND dl.deleted_at IS NULL
         )
     )) AS num_win
 FROM leagues l;
