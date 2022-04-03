@@ -48,6 +48,7 @@ func (s *Server) Router() {
 		// users API
 		apiRouter.Route("/users", func(users chi.Router) {
 			users.Get("/", api.Handler(c.GetUsers).ServeHTTP)
+			users.Get("/{userId}/stats", api.Handler(c.GetUserStats).ServeHTTP)
 		})
 	})
 
