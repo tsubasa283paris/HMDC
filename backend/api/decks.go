@@ -40,6 +40,13 @@ type DeckDuelHistory struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
+type DeckDetails struct {
+	Name            string    `json:"name"`
+	Description     string    `json:"description"`
+	OwnerUserID     string    `json:"owner_user_id"`
+	CurrentLeagueID NullInt32 `json:"current_league_id"`
+}
+
 // Get list of all decks, containing name, owner, description, current league,
 // number of duels and number of victory
 func (c *Controller) GetDecks(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
@@ -238,6 +245,70 @@ func (c *Controller) GetDeckDuelHistory(w http.ResponseWriter, r *http.Request) 
 	}
 
 	log.Println("GetDeckDuelHistory end")
+
+	return http.StatusOK, responseBody, nil
+}
+
+// Get deck details, containing name, owner, description and current league
+func (c *Controller) GetDeckDetails(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
+	log.Println("GetDeckDetails start")
+
+	// acquire URL parameter
+	paramDeckIDStr := chi.URLParam(r, "deckId")
+	if paramDeckIDStr == "" {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "url parameter missing: deckId",
+			},
+			errors.New("url parameter missing")
+	}
+	paramDeckID, err := strconv.Atoi(paramDeckIDStr)
+	if err != nil {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "failed to parse given url parameter to integer: deckId",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// open database connection
+	dbCnx, err := utils.DbCnx()
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// prepare for query
+	queries := db.New(dbCnx)
+
+	// get deck details
+	deck, err := queries.GetDeck(c.ctx, int32(paramDeckID))
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusNotFound,
+			ErrorBody{
+				Error: "deck not found (blame: url parameter)",
+			},
+			errors.Wrap(err, "")
+	} else if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// create responseBody
+	responseBody := DeckDetails{
+		Name:            deck.Name,
+		Description:     deck.Description,
+		OwnerUserID:     deck.UserID,
+		CurrentLeagueID: NullInt32(deck.LeagueID),
+	}
+
+	log.Println("GetDeckDetails end")
 
 	return http.StatusOK, responseBody, nil
 }
