@@ -201,13 +201,13 @@ ORDER BY created_at
 `
 
 type ListUserDuelHistoryRow struct {
-	ID             int32       `json:"id"`
-	LeagueID       int32       `json:"league_id"`
-	OpponentUserID string      `json:"opponent_user_id"`
-	DeckID         int32       `json:"deck_id"`
-	OpponentDeckID int32       `json:"opponent_deck_id"`
-	Result         interface{} `json:"result"`
-	CreatedAt      time.Time   `json:"created_at"`
+	ID             int32         `json:"id"`
+	LeagueID       sql.NullInt32 `json:"league_id"`
+	OpponentUserID string        `json:"opponent_user_id"`
+	DeckID         int32         `json:"deck_id"`
+	OpponentDeckID int32         `json:"opponent_deck_id"`
+	Result         interface{}   `json:"result"`
+	CreatedAt      time.Time     `json:"created_at"`
 }
 
 func (q *Queries) ListUserDuelHistory(ctx context.Context, user1ID string) ([]ListUserDuelHistoryRow, error) {

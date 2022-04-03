@@ -18,16 +18,16 @@ type Deck struct {
 }
 
 type Duel struct {
-	ID          int32        `json:"id"`
-	LeagueID    int32        `json:"league_id"`
-	User1ID     string       `json:"user_1_id"`
-	User2ID     string       `json:"user_2_id"`
-	Deck1ID     int32        `json:"deck_1_id"`
-	Deck2ID     int32        `json:"deck_2_id"`
-	Result      int32        `json:"result"`
-	CreatedAt   time.Time    `json:"created_at"`
-	ConfirmedAt sql.NullTime `json:"confirmed_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
+	ID          int32         `json:"id"`
+	LeagueID    sql.NullInt32 `json:"league_id"`
+	User1ID     string        `json:"user_1_id"`
+	User2ID     string        `json:"user_2_id"`
+	Deck1ID     int32         `json:"deck_1_id"`
+	Deck2ID     int32         `json:"deck_2_id"`
+	Result      int32         `json:"result"`
+	CreatedAt   time.Time     `json:"created_at"`
+	ConfirmedAt sql.NullTime  `json:"confirmed_at"`
+	DeletedAt   sql.NullTime  `json:"deleted_at"`
 }
 
 type League struct {

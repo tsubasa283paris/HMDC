@@ -1,7 +1,7 @@
 -- +migrate Up
 CREATE TABLE duels (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    league_id INTEGER NOT NULL,
+    league_id INTEGER,
     user_1_id VARCHAR(255) NOT NULL,
     user_2_id VARCHAR(255) NOT NULL,
     deck_1_id INTEGER NOT NULL,
@@ -18,11 +18,13 @@ CREATE TABLE duels (
     CONSTRAINT fk_user_1
         FOREIGN KEY(user_1_id)
             REFERENCES users(id)
-            ON DELETE SET NULL,
+            ON DELETE SET NULL
+            ON UPDATE CASCADE,
     CONSTRAINT fk_user_2
         FOREIGN KEY(user_2_id)
             REFERENCES users(id)
-            ON DELETE SET NULL,
+            ON DELETE SET NULL
+            ON UPDATE CASCADE,
     CONSTRAINT fk_deck_1
         FOREIGN KEY(deck_1_id)
             REFERENCES decks(id)

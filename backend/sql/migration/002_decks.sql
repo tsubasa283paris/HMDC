@@ -12,6 +12,7 @@ CREATE TABLE decks (
         FOREIGN KEY(user_id)
             REFERENCES users(id)
             ON DELETE SET NULL
+            ON UPDATE CASCADE
 );
 
 
