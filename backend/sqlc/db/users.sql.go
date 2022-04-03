@@ -68,157 +68,6 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 	return i, err
 }
 
-const getUserDuelHistory = `-- name: GetUserDuelHistory :many
-SELECT
-    dl1.id,
-    dl1.league_id,
-    dl1.user_2_id AS opponent_user_id,
-    dl1.deck_1_id AS deck_id,
-    dl1.deck_2_id AS opponent_deck_id,
-    (SELECT
-        CASE
-            WHEN dl1.result = -1 THEN '-'
-            WHEN dl1.result = 0 THEN 'draw'
-            WHEN dl1.result = 1 THEN 'win'
-            WHEN dl1.result = 2 THEN 'lose'
-            ELSE 'undefined'
-        END
-    ) AS result,
-    dl1.created_at
-FROM duels dl1
-WHERE dl1.user_1_id = $1
-    AND dl1.confirmed_at IS NOT NULL
-UNION
-SELECT
-    dl2.id,
-    dl2.league_id,
-    dl2.user_1_id AS opponent_user_id,
-    dl2.deck_2_id AS deck_id,
-    dl2.deck_1_id AS opponent_deck_id,
-    (SELECT
-        CASE
-            WHEN dl2.result = -1 THEN '-'
-            WHEN dl2.result = 0 THEN 'draw'
-            WHEN dl2.result = 1 THEN 'lose'
-            WHEN dl2.result = 2 THEN 'win'
-            ELSE 'undefined'
-        END
-    ) AS result,
-    dl2.created_at
-FROM duels dl2
-WHERE dl2.user_2_id = $1
-    AND dl2.confirmed_at IS NOT NULL
-ORDER BY created_at
-`
-
-type GetUserDuelHistoryRow struct {
-	ID             int32       `json:"id"`
-	LeagueID       int32       `json:"league_id"`
-	OpponentUserID string      `json:"opponent_user_id"`
-	DeckID         int32       `json:"deck_id"`
-	OpponentDeckID int32       `json:"opponent_deck_id"`
-	Result         interface{} `json:"result"`
-	CreatedAt      time.Time   `json:"created_at"`
-}
-
-func (q *Queries) GetUserDuelHistory(ctx context.Context, user1ID string) ([]GetUserDuelHistoryRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUserDuelHistory, user1ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetUserDuelHistoryRow
-	for rows.Next() {
-		var i GetUserDuelHistoryRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.LeagueID,
-			&i.OpponentUserID,
-			&i.DeckID,
-			&i.OpponentDeckID,
-			&i.Result,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getUserStats = `-- name: GetUserStats :many
-SELECT
-    l.id AS league_id,
-    (SELECT (
-        (
-            SELECT COUNT(*)
-            FROM duels dl
-            WHERE dl.user_1_id = $1
-                AND dl.league_id = l.id
-                AND dl.confirmed_at IS NOT NULL
-        ) + (
-            SELECT COUNT(*)
-            FROM duels dl
-            WHERE dl.user_2_id = $1
-                AND dl.league_id = l.id
-                AND dl.confirmed_at IS NOT NULL
-        )
-    )) AS num_duel,
-    (SELECT (
-        (
-            SELECT COUNT(*)
-            FROM duels dl
-            WHERE dl.user_1_id = $1
-                AND dl.result = 1
-                AND dl.league_id = l.id
-                AND dl.confirmed_at IS NOT NULL
-        ) + (
-            SELECT COUNT(*)
-            FROM duels dl
-            WHERE dl.user_2_id = $1
-                AND dl.result = 2
-                AND dl.league_id = l.id
-                AND dl.confirmed_at IS NOT NULL
-        )
-    )) AS num_win
-FROM leagues l
-`
-
-type GetUserStatsRow struct {
-	LeagueID int32 `json:"league_id"`
-	NumDuel  int32 `json:"num_duel"`
-	NumWin   int32 `json:"num_win"`
-}
-
-func (q *Queries) GetUserStats(ctx context.Context, user1ID string) ([]GetUserStatsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUserStats, user1ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetUserStatsRow
-	for rows.Next() {
-		var i GetUserStatsRow
-		if err := rows.Scan(&i.LeagueID, &i.NumDuel, &i.NumWin); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listUserDecks = `-- name: ListUserDecks :many
 SELECT
     d.id,
@@ -295,6 +144,157 @@ func (q *Queries) ListUserDecks(ctx context.Context, userID string) ([]ListUserD
 			&i.NumDuel,
 			&i.NumWin,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserDuelHistory = `-- name: ListUserDuelHistory :many
+SELECT
+    dl1.id,
+    dl1.league_id,
+    dl1.user_2_id AS opponent_user_id,
+    dl1.deck_1_id AS deck_id,
+    dl1.deck_2_id AS opponent_deck_id,
+    (SELECT
+        CASE
+            WHEN dl1.result = -1 THEN '-'
+            WHEN dl1.result = 0 THEN 'draw'
+            WHEN dl1.result = 1 THEN 'win'
+            WHEN dl1.result = 2 THEN 'lose'
+            ELSE 'undefined'
+        END
+    ) AS result,
+    dl1.created_at
+FROM duels dl1
+WHERE dl1.user_1_id = $1
+    AND dl1.confirmed_at IS NOT NULL
+UNION
+SELECT
+    dl2.id,
+    dl2.league_id,
+    dl2.user_1_id AS opponent_user_id,
+    dl2.deck_2_id AS deck_id,
+    dl2.deck_1_id AS opponent_deck_id,
+    (SELECT
+        CASE
+            WHEN dl2.result = -1 THEN '-'
+            WHEN dl2.result = 0 THEN 'draw'
+            WHEN dl2.result = 1 THEN 'lose'
+            WHEN dl2.result = 2 THEN 'win'
+            ELSE 'undefined'
+        END
+    ) AS result,
+    dl2.created_at
+FROM duels dl2
+WHERE dl2.user_2_id = $1
+    AND dl2.confirmed_at IS NOT NULL
+ORDER BY created_at
+`
+
+type ListUserDuelHistoryRow struct {
+	ID             int32       `json:"id"`
+	LeagueID       int32       `json:"league_id"`
+	OpponentUserID string      `json:"opponent_user_id"`
+	DeckID         int32       `json:"deck_id"`
+	OpponentDeckID int32       `json:"opponent_deck_id"`
+	Result         interface{} `json:"result"`
+	CreatedAt      time.Time   `json:"created_at"`
+}
+
+func (q *Queries) ListUserDuelHistory(ctx context.Context, user1ID string) ([]ListUserDuelHistoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserDuelHistory, user1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserDuelHistoryRow
+	for rows.Next() {
+		var i ListUserDuelHistoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.LeagueID,
+			&i.OpponentUserID,
+			&i.DeckID,
+			&i.OpponentDeckID,
+			&i.Result,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserStats = `-- name: ListUserStats :many
+SELECT
+    l.id AS league_id,
+    (SELECT (
+        (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_1_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        ) + (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_2_id = $1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        )
+    )) AS num_duel,
+    (SELECT (
+        (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_1_id = $1
+                AND dl.result = 1
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        ) + (
+            SELECT COUNT(*)
+            FROM duels dl
+            WHERE dl.user_2_id = $1
+                AND dl.result = 2
+                AND dl.league_id = l.id
+                AND dl.confirmed_at IS NOT NULL
+        )
+    )) AS num_win
+FROM leagues l
+`
+
+type ListUserStatsRow struct {
+	LeagueID int32 `json:"league_id"`
+	NumDuel  int32 `json:"num_duel"`
+	NumWin   int32 `json:"num_win"`
+}
+
+func (q *Queries) ListUserStats(ctx context.Context, user1ID string) ([]ListUserStatsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserStats, user1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserStatsRow
+	for rows.Next() {
+		var i ListUserStatsRow
+		if err := rows.Scan(&i.LeagueID, &i.NumDuel, &i.NumWin); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

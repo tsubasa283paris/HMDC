@@ -31,7 +31,7 @@ UPDATE users
 SET deleted_at = NOW()
 WHERE id = $1;
 
--- name: GetUserStats :many
+-- name: ListUserStats :many
 SELECT
     l.id AS league_id,
     (SELECT (
@@ -68,7 +68,7 @@ SELECT
     )) AS num_win
 FROM leagues l;
 
--- name: GetUserDuelHistory :many
+-- name: ListUserDuelHistory :many
 SELECT
     dl1.id,
     dl1.league_id,

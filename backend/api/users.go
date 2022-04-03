@@ -115,7 +115,7 @@ func (c *Controller) GetUserStats(w http.ResponseWriter, r *http.Request) (int, 
 	}
 
 	// get stats
-	statsList, err := queries.GetUserStats(c.ctx, paramUserID)
+	statsList, err := queries.ListUserStats(c.ctx, paramUserID)
 	if err != nil {
 		return http.StatusInternalServerError,
 			ErrorBody{
@@ -183,7 +183,7 @@ func (c *Controller) GetUserDuelHistory(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// get stats
-	duelHistoryList, err := queries.GetUserDuelHistory(c.ctx, paramUserID)
+	duelHistoryList, err := queries.ListUserDuelHistory(c.ctx, paramUserID)
 	if err != nil {
 		return http.StatusInternalServerError,
 			ErrorBody{
