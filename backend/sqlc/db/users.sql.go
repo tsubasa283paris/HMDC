@@ -177,6 +177,7 @@ SELECT
 FROM duels dl1
 WHERE dl1.user_1_id = $1
     AND dl1.confirmed_at IS NOT NULL
+    AND dl1.deleted_at IS NULL
 UNION
 SELECT
     dl2.id,
@@ -197,6 +198,7 @@ SELECT
 FROM duels dl2
 WHERE dl2.user_2_id = $1
     AND dl2.confirmed_at IS NOT NULL
+    AND dl2.deleted_at IS NULL
 ORDER BY created_at
 `
 

@@ -6,6 +6,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const getDeck = `-- name: GetDeck :one
@@ -45,6 +46,88 @@ func (q *Queries) GetDeck(ctx context.Context, id int32) (GetDeckRow, error) {
 		&i.LeagueID,
 	)
 	return i, err
+}
+
+const listDeckDuelHistory = `-- name: ListDeckDuelHistory :many
+SELECT
+    dl1.id,
+    dl1.league_id,
+    dl1.user_2_id AS opponent_user_id,
+    dl1.deck_2_id AS opponent_deck_id,
+    (SELECT
+        CASE
+            WHEN dl1.result = -1 THEN '-'
+            WHEN dl1.result = 0 THEN 'draw'
+            WHEN dl1.result = 1 THEN 'win'
+            WHEN dl1.result = 2 THEN 'lose'
+            ELSE 'undefined'
+        END
+    ) AS result,
+    dl1.created_at
+FROM duels dl1
+WHERE dl1.deck_1_id = $1
+    AND dl1.confirmed_at IS NOT NULL
+    AND dl1.deleted_at IS NULL
+UNION
+SELECT
+    dl2.id,
+    dl2.league_id,
+    dl2.user_1_id AS opponent_user_id,
+    dl2.deck_1_id AS opponent_deck_id,
+    (SELECT
+        CASE
+            WHEN dl2.result = -1 THEN '-'
+            WHEN dl2.result = 0 THEN 'draw'
+            WHEN dl2.result = 1 THEN 'lose'
+            WHEN dl2.result = 2 THEN 'win'
+            ELSE 'undefined'
+        END
+    ) AS result,
+    dl2.created_at
+FROM duels dl2
+WHERE dl2.deck_2_id = $1
+    AND dl2.confirmed_at IS NOT NULL
+    AND dl2.deleted_at IS NULL
+ORDER BY created_at
+`
+
+type ListDeckDuelHistoryRow struct {
+	ID             int32         `json:"id"`
+	LeagueID       sql.NullInt32 `json:"league_id"`
+	OpponentUserID string        `json:"opponent_user_id"`
+	OpponentDeckID int32         `json:"opponent_deck_id"`
+	Result         interface{}   `json:"result"`
+	CreatedAt      time.Time     `json:"created_at"`
+}
+
+func (q *Queries) ListDeckDuelHistory(ctx context.Context, deck1ID int32) ([]ListDeckDuelHistoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDeckDuelHistory, deck1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDeckDuelHistoryRow
+	for rows.Next() {
+		var i ListDeckDuelHistoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.LeagueID,
+			&i.OpponentUserID,
+			&i.OpponentDeckID,
+			&i.Result,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listDeckStats = `-- name: ListDeckStats :many
