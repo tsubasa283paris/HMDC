@@ -54,6 +54,11 @@ func (s *Server) Router() {
 			users.Get("/{userId}/details", api.Handler(c.GetUserDetails).ServeHTTP)
 			users.Put("/{userId}/details", api.Handler(c.PutUserDetails).ServeHTTP)
 		})
+
+		// decks API
+		apiRouter.Route("/decks", func(users chi.Router) {
+			users.Get("/", api.Handler(c.GetDecks).ServeHTTP)
+		})
 	})
 
 	// auth API
