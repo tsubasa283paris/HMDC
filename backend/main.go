@@ -61,6 +61,7 @@ func (s *Server) Router() {
 			users.Get("/{deckId}/stats", api.Handler(c.GetDeckStats).ServeHTTP)
 			users.Get("/{deckId}/duelhistory", api.Handler(c.GetDeckDuelHistory).ServeHTTP)
 			users.Get("/{deckId}/details", api.Handler(c.GetDeckDetails).ServeHTTP)
+			users.Put("/{deckId}/details", api.Handler(c.PutDeckDetails).ServeHTTP)
 		})
 	})
 

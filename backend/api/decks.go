@@ -2,7 +2,9 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -45,6 +47,11 @@ type DeckDetails struct {
 	Description     string    `json:"description"`
 	OwnerUserID     string    `json:"owner_user_id"`
 	CurrentLeagueID NullInt32 `json:"current_league_id"`
+}
+
+type PutDeckDetailsParam struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 // Get list of all decks, containing name, owner, description, current league,
@@ -309,6 +316,85 @@ func (c *Controller) GetDeckDetails(w http.ResponseWriter, r *http.Request) (int
 	}
 
 	log.Println("GetDeckDetails end")
+
+	return http.StatusOK, responseBody, nil
+}
+
+// Edit deck details: name, description and current league
+func (c *Controller) PutDeckDetails(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
+	log.Println("PutDeckDetails start")
+
+	// acquire URL parameter
+	paramDeckIDStr := chi.URLParam(r, "deckId")
+	if paramDeckIDStr == "" {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "url parameter missing: deckId",
+			},
+			errors.New("url parameter missing")
+	}
+	paramDeckID, err := strconv.Atoi(paramDeckIDStr)
+	if err != nil {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "failed to parse given url parameter to integer: deckId",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// receive body as API parameter
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to read body",
+			},
+			errors.Wrap(err, "")
+	}
+	var param PutDeckDetailsParam
+	err = json.Unmarshal(body, &param)
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to decode body string to JSON format required by this API",
+			},
+			errors.Wrap(err, "")
+	}
+	log.Println("param:", string(body))
+
+	// open database connection
+	dbCnx, err := utils.DbCnx()
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// prepare for query
+	queries := db.New(dbCnx)
+
+	// edit deck details
+	err = queries.UpdateDeck(c.ctx, db.UpdateDeckParams{
+		ID:          int32(paramDeckID),
+		Name:        param.Name,
+		Description: param.Description,
+	})
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// create responseBody
+	responseBody := ErrorBody{
+		Error: "",
+	}
+
+	log.Println("PutDeckDetails end")
 
 	return http.StatusOK, responseBody, nil
 }
