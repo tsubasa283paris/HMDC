@@ -51,6 +51,7 @@ func (s *Server) Router() {
 			users.Get("/{userId}/stats", api.Handler(c.GetUserStats).ServeHTTP)
 			users.Get("/{userId}/duelhistory", api.Handler(c.GetUserDuelHistory).ServeHTTP)
 			users.Get("/{userId}/decks", api.Handler(c.GetUserDecks).ServeHTTP)
+			users.Get("/{userId}/details", api.Handler(c.GetUserDetails).ServeHTTP)
 		})
 	})
 
@@ -65,7 +66,7 @@ func (s *Server) Router() {
 func Auth(db string) (fn func(http.Handler) http.Handler) {
 	fn = func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token := r.Header.Get("Authorization")
+			token := r.Header.Get("Authorization") // TODO: implement token system
 			if token != "admin" {
 				api.RespondJSON(
 					w,
@@ -76,6 +77,8 @@ func Auth(db string) (fn func(http.Handler) http.Handler) {
 				)
 				return
 			}
+			userID := token // TODO: acquire user id from token
+			r.Header.Set("UserID", userID)
 			h.ServeHTTP(w, r)
 		})
 	}
