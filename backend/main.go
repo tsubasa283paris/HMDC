@@ -67,6 +67,7 @@ func (s *Server) Router() {
 		// leagues API
 		apiRouter.Route("/leagues", func(users chi.Router) {
 			users.Get("/", api.Handler(c.GetLeagues).ServeHTTP)
+			users.Get("/duelhistory", api.Handler(c.GetLeagueDuelHistory).ServeHTTP)
 		})
 	})
 
