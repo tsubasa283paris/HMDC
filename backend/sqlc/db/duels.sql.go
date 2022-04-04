@@ -68,3 +68,95 @@ func (q *Queries) ListDuelsWithLimit(ctx context.Context, limit int32) ([]ListDu
 	}
 	return items, nil
 }
+
+const listUnconfirmedDuelsByUser = `-- name: ListUnconfirmedDuelsByUser :many
+SELECT
+    dl1.id,
+    dl1.league_id,
+    dl1.user_2_id AS opponent_user_id,
+    dl1.deck_1_id AS deck_id,
+    dl1.deck_2_id AS opponent_deck_id,
+    (SELECT
+        CASE
+            WHEN dl1.result = -1 THEN '-'
+            WHEN dl1.result = 0 THEN 'draw'
+            WHEN dl1.result = 1 THEN 'win'
+            WHEN dl1.result = 2 THEN 'lose'
+            ELSE 'undefined'
+        END
+    ) AS result,
+    dl1.created_at,
+    dl1.created_by
+FROM duels dl1
+WHERE dl1.user_1_id = $1
+    AND dl1.confirmed_at IS NULL
+    AND dl1.deleted_at IS NULL
+    AND (dl1.created_by = 1 OR dl1.created_by = 2)
+UNION
+SELECT
+    dl2.id,
+    dl2.league_id,
+    dl2.user_1_id AS opponent_user_id,
+    dl2.deck_2_id AS deck_id,
+    dl2.deck_1_id AS opponent_deck_id,
+    (SELECT
+        CASE
+            WHEN dl2.result = -1 THEN '-'
+            WHEN dl2.result = 0 THEN 'draw'
+            WHEN dl2.result = 1 THEN 'lose'
+            WHEN dl2.result = 2 THEN 'win'
+            ELSE 'undefined'
+        END
+    ) AS result,
+    dl2.created_at,
+    dl2.created_by
+FROM duels dl2
+WHERE dl2.user_2_id = $1
+    AND dl2.confirmed_at IS NULL
+    AND dl2.deleted_at IS NULL
+    AND (dl2.created_by = 1 OR dl2.created_by = 2)
+ORDER BY created_at
+`
+
+type ListUnconfirmedDuelsByUserRow struct {
+	ID             int32         `json:"id"`
+	LeagueID       sql.NullInt32 `json:"league_id"`
+	OpponentUserID string        `json:"opponent_user_id"`
+	DeckID         int32         `json:"deck_id"`
+	OpponentDeckID int32         `json:"opponent_deck_id"`
+	Result         interface{}   `json:"result"`
+	CreatedAt      time.Time     `json:"created_at"`
+	CreatedBy      int32         `json:"created_by"`
+}
+
+func (q *Queries) ListUnconfirmedDuelsByUser(ctx context.Context, user1ID string) ([]ListUnconfirmedDuelsByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUnconfirmedDuelsByUser, user1ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUnconfirmedDuelsByUserRow
+	for rows.Next() {
+		var i ListUnconfirmedDuelsByUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.LeagueID,
+			&i.OpponentUserID,
+			&i.DeckID,
+			&i.OpponentDeckID,
+			&i.Result,
+			&i.CreatedAt,
+			&i.CreatedBy,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

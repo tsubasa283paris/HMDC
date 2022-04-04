@@ -26,6 +26,7 @@ type Duel struct {
 	Deck2ID     int32         `json:"deck_2_id"`
 	Result      int32         `json:"result"`
 	CreatedAt   time.Time     `json:"created_at"`
+	CreatedBy   int32         `json:"created_by"`
 	ConfirmedAt sql.NullTime  `json:"confirmed_at"`
 	DeletedAt   sql.NullTime  `json:"deleted_at"`
 }

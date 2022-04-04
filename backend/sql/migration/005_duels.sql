@@ -8,6 +8,7 @@ CREATE TABLE duels (
     deck_2_id INTEGER NOT NULL,
     result INTEGER NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by INTEGER NOT NULL,
     confirmed_at TIMESTAMPTZ,
     deleted_at TIMESTAMPTZ,
     PRIMARY KEY(id),
