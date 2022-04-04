@@ -69,6 +69,11 @@ func (s *Server) Router() {
 			users.Get("/", api.Handler(c.GetLeagues).ServeHTTP)
 			users.Get("/duelhistory", api.Handler(c.GetLeagueDuelHistory).ServeHTTP)
 		})
+
+		// requests API
+		apiRouter.Route("/requests", func(users chi.Router) {
+			users.Get("/", api.Handler(c.GetUserDuelRequests).ServeHTTP)
+		})
 	})
 
 	// auth API
