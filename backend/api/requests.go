@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 	"github.com/tsubasa283paris/HMDC/sqlc/db"
 	"github.com/tsubasa283paris/HMDC/utils"
@@ -289,6 +291,148 @@ func (c *Controller) PostUserDuelRequest(w http.ResponseWriter, r *http.Request)
 	}
 
 	log.Println("PostUserDuelRequest end")
+
+	return http.StatusOK, responseBody, nil
+}
+
+// Confirm a duel request
+func (c *Controller) PutRequest(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
+	log.Println("PutRequest start")
+
+	// acquire URL parameter
+	paramDuelIDStr := chi.URLParam(r, "duelId")
+	if paramDuelIDStr == "" {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "url parameter missing: duelId",
+			},
+			errors.New("url parameter missing")
+	}
+	paramDuelID, err := strconv.Atoi(paramDuelIDStr)
+	if err != nil {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "failed to parse given url parameter to integer: duelId",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// open database connection
+	dbCnx, err := utils.DbCnx()
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// prepare for query
+	queries := db.New(dbCnx)
+
+	// check if specified ID exists
+	_, err = queries.GetDuel(c.ctx, int32(paramDuelID))
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusNotFound,
+			ErrorBody{
+				Error: "duel not found (blame: url parameter)",
+			},
+			errors.Wrap(err, "")
+	} else if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// confirm
+	err = queries.ConfirmDuel(c.ctx, int32(paramDuelID))
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// create responseBody
+	responseBody := ErrorBody{
+		Error: "",
+	}
+
+	log.Println("PutRequest end")
+
+	return http.StatusOK, responseBody, nil
+}
+
+// Deny / delete a duel request
+func (c *Controller) DeleteRequest(w http.ResponseWriter, r *http.Request) (int, interface{}, error) {
+	log.Println("DeleteRequest start")
+
+	// acquire URL parameter
+	paramDuelIDStr := chi.URLParam(r, "duelId")
+	if paramDuelIDStr == "" {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "url parameter missing: duelId",
+			},
+			errors.New("url parameter missing")
+	}
+	paramDuelID, err := strconv.Atoi(paramDuelIDStr)
+	if err != nil {
+		return http.StatusBadRequest,
+			ErrorBody{
+				Error: "failed to parse given url parameter to integer: duelId",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// open database connection
+	dbCnx, err := utils.DbCnx()
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to connect to the database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// prepare for query
+	queries := db.New(dbCnx)
+
+	// check if specified ID exists
+	_, err = queries.GetDuel(c.ctx, int32(paramDuelID))
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusNotFound,
+			ErrorBody{
+				Error: "duel not found (blame: url parameter)",
+			},
+			errors.Wrap(err, "")
+	} else if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// deny / delete
+	err = queries.DeleteDuel(c.ctx, int32(paramDuelID))
+	if err != nil {
+		return http.StatusInternalServerError,
+			ErrorBody{
+				Error: "failed to communicate with database",
+			},
+			errors.Wrap(err, "")
+	}
+
+	// create responseBody
+	responseBody := ErrorBody{
+		Error: "",
+	}
+
+	log.Println("DeleteRequest end")
 
 	return http.StatusOK, responseBody, nil
 }

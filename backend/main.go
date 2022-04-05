@@ -74,6 +74,8 @@ func (s *Server) Router() {
 		apiRouter.Route("/requests", func(users chi.Router) {
 			users.Get("/", api.Handler(c.GetUserDuelRequests).ServeHTTP)
 			users.Post("/", api.Handler(c.PostUserDuelRequest).ServeHTTP)
+			users.Put("/{duelId}", api.Handler(c.PutRequest).ServeHTTP)
+			users.Delete("/{duelId}", api.Handler(c.DeleteRequest).ServeHTTP)
 		})
 	})
 
