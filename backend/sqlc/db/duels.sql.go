@@ -9,6 +9,18 @@ import (
 	"time"
 )
 
+const confirmDuel = `-- name: ConfirmDuel :exec
+UPDATE duels
+SET confirmed_at = NOW()
+WHERE id = $1
+    AND deleted_at IS NULL
+`
+
+func (q *Queries) ConfirmDuel(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, confirmDuel, id)
+	return err
+}
+
 const createUnconfirmedDuel = `-- name: CreateUnconfirmedDuel :exec
 INSERT INTO duels (
     league_id,
@@ -51,6 +63,44 @@ func (q *Queries) CreateUnconfirmedDuel(ctx context.Context, arg CreateUnconfirm
 		arg.CreatedBy,
 	)
 	return err
+}
+
+const deleteDuel = `-- name: DeleteDuel :exec
+UPDATE duels
+SET deleted_at = NOW()
+WHERE id = $1
+    AND deleted_at IS NULL
+`
+
+func (q *Queries) DeleteDuel(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteDuel, id)
+	return err
+}
+
+const getDuel = `-- name: GetDuel :one
+SELECT id, league_id, user_1_id, user_2_id, deck_1_id, deck_2_id, result, created_at, created_by, confirmed_at, deleted_at
+FROM duels
+WHERE id = $1
+    AND deleted_at IS NULL
+`
+
+func (q *Queries) GetDuel(ctx context.Context, id int32) (Duel, error) {
+	row := q.db.QueryRowContext(ctx, getDuel, id)
+	var i Duel
+	err := row.Scan(
+		&i.ID,
+		&i.LeagueID,
+		&i.User1ID,
+		&i.User2ID,
+		&i.Deck1ID,
+		&i.Deck2ID,
+		&i.Result,
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.ConfirmedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const listDuelsWithLimit = `-- name: ListDuelsWithLimit :many

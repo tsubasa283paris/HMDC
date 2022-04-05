@@ -81,3 +81,21 @@ VALUES (
     $6,
     $7
 );
+
+-- name: GetDuel :one
+SELECT *
+FROM duels
+WHERE id = $1
+    AND deleted_at IS NULL;
+
+-- name: ConfirmDuel :exec
+UPDATE duels
+SET confirmed_at = NOW()
+WHERE id = $1
+    AND deleted_at IS NULL;
+
+-- name: DeleteDuel :exec
+UPDATE duels
+SET deleted_at = NOW()
+WHERE id = $1
+    AND deleted_at IS NULL;
