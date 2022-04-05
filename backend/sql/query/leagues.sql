@@ -1,3 +1,9 @@
+-- name: GetLeague :one
+SELECT
+    *
+FROM leagues
+WHERE id = $1;
+
 -- name: ListLeagues :many
 SELECT 
     id,

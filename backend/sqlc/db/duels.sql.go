@@ -9,6 +9,50 @@ import (
 	"time"
 )
 
+const createUnconfirmedDuel = `-- name: CreateUnconfirmedDuel :exec
+INSERT INTO duels (
+    league_id,
+    user_1_id,
+    user_2_id,
+    deck_1_id,
+    deck_2_id,
+    result,
+    created_by
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7
+)
+`
+
+type CreateUnconfirmedDuelParams struct {
+	LeagueID  sql.NullInt32 `json:"league_id"`
+	User1ID   string        `json:"user_1_id"`
+	User2ID   string        `json:"user_2_id"`
+	Deck1ID   int32         `json:"deck_1_id"`
+	Deck2ID   int32         `json:"deck_2_id"`
+	Result    int32         `json:"result"`
+	CreatedBy int32         `json:"created_by"`
+}
+
+func (q *Queries) CreateUnconfirmedDuel(ctx context.Context, arg CreateUnconfirmedDuelParams) error {
+	_, err := q.db.ExecContext(ctx, createUnconfirmedDuel,
+		arg.LeagueID,
+		arg.User1ID,
+		arg.User2ID,
+		arg.Deck1ID,
+		arg.Deck2ID,
+		arg.Result,
+		arg.CreatedBy,
+	)
+	return err
+}
+
 const listDuelsWithLimit = `-- name: ListDuelsWithLimit :many
 SELECT
     id,

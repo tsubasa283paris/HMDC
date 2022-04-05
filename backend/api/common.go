@@ -67,3 +67,19 @@ func (x NullInt32) MarshalJSON() ([]byte, error) {
 	}
 	return []byte(`null`), nil
 }
+
+// Unmarshal null-able integer value converting JSON null value as Valid: false
+func (x *NullInt32) UnmarshalJSON(data []byte) error {
+	// Unmarshalling into a pointer will let us detect null
+	var y *int32
+	if err := json.Unmarshal(data, &y); err != nil {
+		return err
+	}
+	if y != nil {
+		x.Valid = true
+		x.Int32 = *y
+	} else {
+		x.Valid = false
+	}
+	return nil
+}

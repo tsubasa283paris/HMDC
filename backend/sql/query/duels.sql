@@ -61,3 +61,23 @@ WHERE dl2.user_2_id = $1
     AND dl2.deleted_at IS NULL
     AND (dl2.created_by = 1 OR dl2.created_by = 2)
 ORDER BY created_at;
+
+-- name: CreateUnconfirmedDuel :exec
+INSERT INTO duels (
+    league_id,
+    user_1_id,
+    user_2_id,
+    deck_1_id,
+    deck_2_id,
+    result,
+    created_by
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7
+);

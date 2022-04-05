@@ -7,6 +7,26 @@ import (
 	"context"
 )
 
+const getLeague = `-- name: GetLeague :one
+SELECT
+    id, name, created_at, updated_at, deleted_at
+FROM leagues
+WHERE id = $1
+`
+
+func (q *Queries) GetLeague(ctx context.Context, id int32) (League, error) {
+	row := q.db.QueryRowContext(ctx, getLeague, id)
+	var i League
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const listLeagues = `-- name: ListLeagues :many
 SELECT 
     id,

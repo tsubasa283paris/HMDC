@@ -73,6 +73,7 @@ func (s *Server) Router() {
 		// requests API
 		apiRouter.Route("/requests", func(users chi.Router) {
 			users.Get("/", api.Handler(c.GetUserDuelRequests).ServeHTTP)
+			users.Post("/", api.Handler(c.PostUserDuelRequest).ServeHTTP)
 		})
 	})
 
