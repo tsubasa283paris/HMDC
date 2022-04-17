@@ -12,14 +12,14 @@ import (
 )
 
 type LeagueDuelHistory struct {
-	DuelID    int32     `json:"duel_id"`
-	LeagueID  NullInt32 `json:"league_id"`
-	User1ID   string    `json:"user_1_id"`
-	User2ID   string    `json:"user_2_id"`
-	Deck1ID   int32     `json:"deck_1_id"`
-	Deck2ID   int32     `json:"deck_2_id"`
+	DuelID    int32     `json:"duelId"`
+	LeagueID  NullInt32 `json:"leagueId"`
+	User1ID   string    `json:"user1Id"`
+	User2ID   string    `json:"user2Id"`
+	Deck1ID   int32     `json:"deck1Id"`
+	Deck2ID   int32     `json:"deck2Id"`
 	Result    int32     `json:"result"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // Get list of all leagues, containing only id and name

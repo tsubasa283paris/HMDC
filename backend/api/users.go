@@ -18,28 +18,28 @@ import (
 )
 
 type UserStatsPerLeague struct {
-	LeagueID int32 `json:"league_id"`
-	NumDuel  int32 `json:"num_duel"`
-	NumWin   int32 `json:"num_win"`
+	LeagueID int32 `json:"leagueId"`
+	NumDuel  int32 `json:"numDuel"`
+	NumWin   int32 `json:"numWin"`
 }
 
 type UserDuelHistory struct {
-	DuelID         int32     `json:"duel_id"`
-	LeagueID       NullInt32 `json:"league_id"`
-	OpponentUserID string    `json:"opponent_user_id"`
-	DeckID         int32     `json:"deck_id"`
-	OpponentDeckID int32     `json:"opponent_deck_id"`
+	DuelID         int32     `json:"duelId"`
+	LeagueID       NullInt32 `json:"leagueId"`
+	OpponentUserID string    `json:"opponentUserId"`
+	DeckID         int32     `json:"deckId"`
+	OpponentDeckID int32     `json:"opponentDeckId"`
 	Result         string    `json:"result"`
-	CreatedAt      time.Time `json:"created_at"`
+	CreatedAt      time.Time `json:"createdAt"`
 }
 
 type UserDeck struct {
-	DeckID      int32     `json:"deck_id"`
+	DeckID      int32     `json:"deckId"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	LeagueID    NullInt32 `json:"league_id"`
-	NumDuel     int32     `json:"num_duel"`
-	NumWin      int32     `json:"num_win"`
+	LeagueID    NullInt32 `json:"leagueId"`
+	NumDuel     int32     `json:"numDuel"`
+	NumWin      int32     `json:"numWin"`
 }
 
 type UserDetails struct {

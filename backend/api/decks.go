@@ -18,35 +18,35 @@ import (
 )
 
 type Deck struct {
-	DeckID          int32     `json:"deck_id"`
+	DeckID          int32     `json:"deckId"`
 	Name            string    `json:"name"`
 	Description     string    `json:"description"`
-	OwnerUserID     string    `json:"owner_user_id"`
-	CurrentLeagueID NullInt32 `json:"current_league_id"`
-	NumDuel         int32     `json:"num_duel"`
-	NumWin          int32     `json:"num_win"`
+	OwnerUserID     string    `json:"ownerUserId"`
+	CurrentLeagueID NullInt32 `json:"currentLeagueId"`
+	NumDuel         int32     `json:"numDuel"`
+	NumWin          int32     `json:"numWin"`
 }
 
 type DeckStatsPerLeague struct {
-	LeagueID int32 `json:"league_id"`
-	NumDuel  int32 `json:"num_duel"`
-	NumWin   int32 `json:"num_win"`
+	LeagueID int32 `json:"leagueId"`
+	NumDuel  int32 `json:"numDuel"`
+	NumWin   int32 `json:"numWin"`
 }
 
 type DeckDuelHistory struct {
-	DuelID         int32     `json:"duel_id"`
-	LeagueID       NullInt32 `json:"league_id"`
-	OpponentUserID string    `json:"opponent_user_id"`
-	OpponentDeckID int32     `json:"opponent_deck_id"`
+	DuelID         int32     `json:"duelId"`
+	LeagueID       NullInt32 `json:"leagueId"`
+	OpponentUserID string    `json:"opponentUserId"`
+	OpponentDeckID int32     `json:"opponentDeckId"`
 	Result         string    `json:"result"`
-	CreatedAt      time.Time `json:"created_at"`
+	CreatedAt      time.Time `json:"createdAt"`
 }
 
 type DeckDetails struct {
 	Name            string    `json:"name"`
 	Description     string    `json:"description"`
-	OwnerUserID     string    `json:"owner_user_id"`
-	CurrentLeagueID NullInt32 `json:"current_league_id"`
+	OwnerUserID     string    `json:"ownerUserId"`
+	CurrentLeagueID NullInt32 `json:"currentLeagueId"`
 }
 
 type PutDeckDetailsParam struct {
