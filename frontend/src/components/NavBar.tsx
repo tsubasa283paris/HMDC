@@ -35,7 +35,7 @@ export default function NavBar() {
             <MenuIcon />
           </IconButton>
           <Typography variant='h5' component='div' sx={{ flexGrow: 1 }}>
-            Hakushin Master Duel Club
+            Hakushin Master Duel Club!!
           </Typography>
           <div>
             <IconButton
