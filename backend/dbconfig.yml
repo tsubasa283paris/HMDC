@@ -1,4 +1,4 @@
 development:
     dialect: postgres
-    datasource: host=localhost dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD}
+    datasource: host=${DB_HOST} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD}
     dir: sql/migration

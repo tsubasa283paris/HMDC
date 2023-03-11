@@ -35,22 +35,11 @@
    sudo systemctl start postgresql.service
    ```
 
-1. DBを作成する。
-   1. PostgreSQLのインストールによってUbuntuシステムに作成されたpostgresユーザの権限でDBを作成する。  
-      ここではDB名は `hmdc` とする。
-      ```bash
-      sudo -u postgres createdb hmdc
-      ```
-   
-   1. `.bashrc` に上記DB名を環境変数に保存する処理を追加する。  
-      ```bash
-      echo 'export DB_NAME=hmdc' >> ~/.bashrc
-      ```
-   
-      その後、`.bashrc` をsourceする。  
-      ```bash
-      source ~/.bashrc
-      ```
+1. PostgreSQLのインストールによってUbuntuシステムに作成されたpostgresユーザの権限でDBを作成する。  
+   ここではDB名は `hmdc` とする。
+   ```bash
+   sudo -u postgres createdb hmdc
+   ```
 
 1. DBにアクセスするためのPostgreSQLユーザを作成する。  
    ここではユーザ名 `jonouchi`、パスワード `shizuka` とする。
@@ -71,16 +60,19 @@
 
       実行後、対話プロンプトを `\q` で閉じる。
    
-   1. `.bashrc` に上記ユーザ名・パスワードを環境変数に保存する処理を追加する。  
-      ```bash
-      echo 'export DB_USER=jonouchi
-      export DB_PASSWORD=shizuka' >> ~/.bashrc
-      ```
-   
-      その後、`.bashrc` をsourceする。  
-      ```bash
-      source ~/.bashrc
-      ```
+1. `.bashrc` にDBホスト名、DB名、ユーザ名、パスワードを環境変数に保存する処理を追加する。  
+   ホスト名はlocalhost。  
+   ```bash
+   echo 'export DB_HOST=localhost
+   export DB_NAME=hmdc
+   export DB_USER=jonouchi
+   export DB_PASSWORD=shizuka' >> ~/.bashrc
+   ```
+
+   その後、`.bashrc` をsourceする。  
+   ```bash
+   source ~/.bashrc
+   ```
 
 1. 当ファイルと同じディレクトリから、sql-migrateをインストールする。  
    ```bash
