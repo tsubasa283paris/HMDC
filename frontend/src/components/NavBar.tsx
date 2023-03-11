@@ -24,7 +24,7 @@ export default function NavBar() {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position='static' color='default'>
-        <Toolbar sx={{textAlign: 'center'}}>
+        <Toolbar sx={{ textAlign: 'center' }}>
           <IconButton
             size='large'
             edge='start'
