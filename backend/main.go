@@ -84,6 +84,11 @@ func (s *Server) Router() {
 		authRouter.Post("/login", api.Handler(c.Login).ServeHTTP)
 		authRouter.Post("/signup", api.Handler(c.SignUp).ServeHTTP)
 	})
+
+	// hello API
+	s.router.Route("/api/hello", func(authRouter chi.Router) {
+		authRouter.Post("/", api.Handler(c.Hello).ServeHTTP)
+	})
 }
 
 // Authentication
