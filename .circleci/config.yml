@@ -9,25 +9,32 @@ jobs:
       - run:
           name: Update NPM
           command: "sudo npm install -g npm"
+          working_directory: frontend
       - restore_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
+          working_directory: frontend
       - run:
           name: Install Dependencies
           command: npm install
+          working_directory: frontend
       - save_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
+          working_directory: frontend
       - run:
           name: Build React App
           command: npm run build
+          working_directory: frontend
       - save_cache:
           key: app-build-cache-{{ .Branch }}
           paths:
             - ./build
+          working_directory: frontend
       - run:
           name: Deploy to Netlify
           command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir=build
+          working_directory: frontend
 workflows:
   version: 2
   build-deploy:
