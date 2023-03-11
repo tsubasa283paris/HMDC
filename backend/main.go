@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 // Server struct
@@ -84,6 +85,11 @@ func (s *Server) Router() {
 		authRouter.Post("/login", api.Handler(c.Login).ServeHTTP)
 		authRouter.Post("/signup", api.Handler(c.SignUp).ServeHTTP)
 	})
+
+	// hello API
+	s.router.Route("/api/hello", func(authRouter chi.Router) {
+		authRouter.Post("/", api.Handler(c.Hello).ServeHTTP)
+	})
 }
 
 // Authentication
@@ -121,6 +127,8 @@ func main() {
 	s.Middleware()
 	s.Router()
 
+	handler := cors.Default().Handler(s.router)
+
 	log.Printf("Starting up on http://localhost:%s", *port)
-	log.Fatal(http.ListenAndServe(fmt.Sprint(":", *port), s.router))
+	log.Fatal(http.ListenAndServe(fmt.Sprint(":", *port), handler))
 }

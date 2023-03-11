@@ -57,7 +57,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error: %s", err)
 	}
 	RespondJSON(w, status, res)
-	return
 }
 
 // Marshal NullInt32 value converting null value as JSON null

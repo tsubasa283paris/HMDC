@@ -9,6 +9,7 @@ require (
 	github.com/kyleconroy/sqlc v1.12.0 // indirect
 	github.com/lib/pq v1.10.7
 	github.com/pkg/errors v0.9.1
+	github.com/rs/cors v1.8.3 // indirect
 	github.com/rubenv/sql-migrate v1.4.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 )
