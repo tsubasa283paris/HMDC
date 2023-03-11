@@ -60,10 +60,11 @@
 
       実行後、対話プロンプトを `\q` で閉じる。
    
-1. `.bashrc` にDBホスト名、DB名、ユーザ名、パスワードを環境変数に保存する処理を追加する。  
+1. `.bashrc` にDBホスト名、ポート番号、DB名、ユーザ名、パスワードを環境変数に保存する処理を追加する。  
    ホスト名はlocalhost。  
    ```bash
    echo 'export DB_HOST=localhost
+   export DB_PORT=5432
    export DB_NAME=hmdc
    export DB_USER=jonouchi
    export DB_PASSWORD=shizuka' >> ~/.bashrc

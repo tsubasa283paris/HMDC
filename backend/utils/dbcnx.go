@@ -9,12 +9,14 @@ import (
 
 // Return pointer to opened sql.DB
 func DbCnx() (*sql.DB, error) {
-	pgUrl := os.Getenv("DB_HOST")
-	if pgUrl == "" {
-		return nil, errors.New("environment variable DB_HOST not set")
-	}
-
-	dbCnx, err := sql.Open("postgres", pgUrl)
+	dbCnx, err := sql.Open(
+		"postgres",
+		"host="+os.Getenv("DB_HOST")+
+			" port="+os.Getenv("DB_PORT")+
+			" dbname="+os.Getenv("DB_NAME")+
+			" user="+os.Getenv("DB_USER")+
+			" password="+os.Getenv("DB_PASSWORD"),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open connection with the database")
 	}
