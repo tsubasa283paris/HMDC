@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 // Server struct
@@ -126,6 +127,8 @@ func main() {
 	s.Middleware()
 	s.Router()
 
+	handler := cors.Default().Handler(s.router)
+
 	log.Printf("Starting up on http://localhost:%s", *port)
-	log.Fatal(http.ListenAndServe(fmt.Sprint(":", *port), s.router))
+	log.Fatal(http.ListenAndServe(fmt.Sprint(":", *port), handler))
 }
